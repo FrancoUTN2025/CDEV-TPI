@@ -1,4 +1,3 @@
-//Nos permite homogenizar la carga de recursos, porque pueden ser de formato fbx o algun otro
 /*import * as THREE from 'three';
 import { FBXLoader } from '../../js/libs/FBXLoader.js';
 
@@ -20,6 +19,7 @@ class PromiseLoader {
 export default PromiseLoader;
 export { PromiseLoader };*/
 
+//Nos permite homogenizar la carga de recursos, porque pueden ser de formato fbx o algun otro
 
 import * as THREE from 'three';
 import { FBXLoader } from '../../js/libs/FBXLoader.js';

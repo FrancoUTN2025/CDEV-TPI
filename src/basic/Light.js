@@ -11,7 +11,7 @@ sunLight.position.set(50, 100, 50); // Altura y dirección del sol
 sunLight.castShadow = true; // Permite sombras
 
 // Opcional: configura la calidad de las sombras
-sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.width = 2048; 
 sunLight.shadow.mapSize.height = 2048;
 sunLight.shadow.camera.near = 0.5;
 sunLight.shadow.camera.far = 500;

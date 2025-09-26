@@ -19,45 +19,17 @@ import cRotationController from './src/controllers/cRotationController.js';
 import { GLTFLoader } from './js/libs/GLTFLoader.js';
 
 scene.add(light);
-/*const loader = new THREE.TextureLoader();
-loader.load('./src/models/Entornos/Imagenes/cieloEstrellado.jpg', function(texture) {
-  scene.background = texture;
-});
-*/
+
 let bot;
 
-// Crear la curva de la elipse (vertical en el plano YZ)
-/*const ellipseCurve = new THREE.EllipseCurve(
-  5, 2,            // xCenter, yCenter
-  2, 3,            // xRadius, yRadius (ajusta el tamaño)
-  0, 2 * Math.PI,  // startAngle, endAngle
-  false,           // sentido antihorario
-  0                // rotación
-);
-
-// Obtener puntos de la curva
-const points = ellipseCurve.getPoints(50);
-
-// Crear geometría a partir de los puntos
-const geometry = new THREE.BufferGeometry().setFromPoints(points);
-
-// Crear material para la línea
-const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
-
-// Crear la línea de la elipse
-const ellipse = new THREE.Line(geometry, material);
-
-// Rota la elipse para que quede vertical (en el plano YZ)
-ellipse.rotation.y = Math.PI / 2;
-
-// Opcional: posiciónala donde quieras
-ellipse.position.set(0, 5, 0);
-
-scene.add(ellipse);*/
 
 // --- Grupo de suelos sobre los que el bot puede caminar ---
 const walkableGroundGroup = new THREE.Group();
 scene.add(walkableGroundGroup);
+
+// --- Grupo de esferas para hacer que giren ---
+const rotatingSpheresGroup = new THREE.Group();
+scene.add(rotatingSpheresGroup);
 
 // --- Variables de física ---
 let velocityY = 0;
@@ -85,14 +57,29 @@ gltfLoader.load(
     root.position.set(0, 0, 0);
     scene.add(root);
 
-    // Recorrer solo meshes para agregar el floor
+    // Recorrer meshes para agregar floor y esferas
     root.traverse((child) => {
       if (child.isMesh) {
+        // Identificar floor
         if (child.name.toLowerCase().includes('floor')) {
           walkableGroundGroup.add(child);
           if (child.material && child.material.color) {
             child.material.color.set(0x316329); // Cambia a azul, o el color que prefieras
           }
+        }
+        
+        // Identificar esferas por nombre o geometría
+        const isSphereName = child.name.toLowerCase().includes('sphere') || 
+                            child.name.toLowerCase().includes('esfera') ||
+                            child.name.toLowerCase().includes('ball') ||
+                            child.name.toLowerCase().includes('orb');
+        
+        const isSphereGeometry = child.geometry && child.geometry.type === 'SphereGeometry';
+        
+        // Si parece ser una esfera por nombre o geometría, agregarla al grupo de rotación
+        if (isSphereName || isSphereGeometry) {
+          rotatingSpheresGroup.add(child);
+          console.log("Esfera encontrada:", child.name, child.geometry.type);
         }
       }
     });
@@ -144,6 +131,9 @@ const rotationSpeed = 0.05;
 const cameraDistance = 5; // Distancia detrás del bot
 const cameraHeight = 2;   // Altura sobre el bot
 
+
+//Loop principal del juego
+//manejamos la logica del juego, renderizamos la escena y actualizamos la camara
 loopMachine.addCallback(() => {
   if (bot) {
     // Rotación manual con teclas
@@ -160,6 +150,7 @@ loopMachine.addCallback(() => {
     velocityY += gravity * 0.1;
     bot.position.y += velocityY;
 
+    //detecta donde esta el suelo y ajusta la posicion del bot, nos permite aplicar la gravedad y fisicas
     raycaster.set(bot.position.clone().add(new THREE.Vector3(0, 50, 0)), down);
     const intersects = raycaster.intersectObjects(walkableGroundGroup.children, true);
     if (intersects.length > 0) {
@@ -183,6 +174,13 @@ loopMachine.addCallback(() => {
     const lookAtTarget = bot.position.clone().add(new THREE.Vector3(0, 1, 0));
     camera.lookAt(lookAtTarget);
   }
+
+  // --- Rotar todas las esferas en el eje Y ---
+  rotatingSpheresGroup.children.forEach((sphere) => {
+    if (sphere.isMesh) {
+      sphere.rotation.y += 0.02; // Velocidad de rotación, puedes ajustarla
+    }
+  });
 
   if (keyListener.isPressed(keyCode.ENTER)) cube.rotation.y += 0.01;
 
