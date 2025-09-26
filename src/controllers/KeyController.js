@@ -29,8 +29,8 @@ class KeyController {
         if(this.keyListener.isPressed(keyCode.KEY_D)) this.state.translation.x = -1;
         if(this.keyListener.isPressed(keyCode.LEFT_ARROW)) this.state.rotation.y = 1;
         if(this.keyListener.isPressed(keyCode.RIGHT_ARROW)) this.state.rotation.y = -1;
-        if (this.keyListener.isPressed(keyCode.SPACE) && !this.state.isJumping) {this.state.isJumping = true; this.state.velocityY = 10; // Ajusta la fuerza del salto
-}
+        //if (this.keyListener.isPressed(keyCode.SPACE) && !this.state.isJumping) {this.state.isJumping = true; this.state.velocityY = 10; // Ajusta la fuerza del salto
+
         //if(this.keyListener.isPressed(keyCode.LEFT_ARROW)) this.state.angle.y = 1;
         //if(this.keyListener.isPressed(keyCode.RIGHT_ARROW)) this.state.angle.y = -1;
     }

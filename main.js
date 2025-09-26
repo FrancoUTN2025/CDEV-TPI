@@ -17,7 +17,6 @@ import animationController from './src/controllers/AnimationController.js';
 import rotationController from './src/controllers/RotationController.js';
 import cRotationController from './src/controllers/cRotationController.js';
 import { GLTFLoader } from './js/libs/GLTFLoader.js';
-import { OrbitControls } from './js/libs/OrbitControls.js';
 
 scene.add(light);
 /*const loader = new THREE.TextureLoader();
@@ -133,19 +132,17 @@ X_BotLoader().then((loadedBot) => {
   characterController.addController(moveController);
   characterController.addController(animationController);
   characterController.addController(modelController);
+  //characterController.addController(cRotationController);
   characterController.addController(rotationController);
-  characterController.addController(cRotationController);
   characterController.addCharacter(bot);
   characterController.start();
 });
 
-// --- Configuración de cámara y controles ---
+// --- Configuración de cámara ---
 const rotationSpeed = 0.05;
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.1;
-controls.enablePan = false;
-controls.target.set(0, 2, 0);
+// Variables para seguimiento de cámara fijo desde atrás
+const cameraDistance = 5; // Distancia detrás del bot
+const cameraHeight = 2;   // Altura sobre el bot
 
 loopMachine.addCallback(() => {
   if (bot) {
@@ -174,10 +171,18 @@ loopMachine.addCallback(() => {
     }
 
     // --- OrbitControls sigue al bot ---
-    controls.target.copy(bot.position).add(new THREE.Vector3(0, 2, 0));
+    // Calcular posición de cámara fija detrás del bot
+    const cameraOffset = new THREE.Vector3(0, cameraHeight, -cameraDistance);
+    // Rotar el offset según la rotación del bot para mantener la cámara atrás
+    cameraOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), bot.rotation.y);
+    
+    // Posicionar cámara
+    camera.position.copy(bot.position).add(cameraOffset);
+    
+    // La cámara mira hacia el bot (un poco por encima para mejor vista)
+    const lookAtTarget = bot.position.clone().add(new THREE.Vector3(0, 1, 0));
+    camera.lookAt(lookAtTarget);
   }
-
-  controls.update();
 
   if (keyListener.isPressed(keyCode.ENTER)) cube.rotation.y += 0.01;
 
