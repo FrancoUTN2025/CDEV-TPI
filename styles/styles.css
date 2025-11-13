@@ -1,0 +1,89 @@
+body {
+    margin: 0;
+    overflow: hidden; 
+    font-family: Arial, sans-serif;
+    color: white; 
+}
+
+/* Estilos para el canvas/contenedor del renderizador */
+#bg {
+    display: block; 
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+#welcomeScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.95); /* Fondo oscuro */
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; /* Centrado vertical */
+    align-items: center; /* Centrado horizontal */
+    z-index: 1000; /* Asegura que esté por encima de todo */
+    color: white;
+    text-align: center;
+}
+
+#welcomeScreen h1 {
+    font-size: 4em; /* Letras grandes */
+    margin-bottom: 30px;
+}
+
+#startButton {
+    padding: 15px 30px;
+    font-size: 1.5em;
+    background-color: #4CAF50; 
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#startButton:hover {
+    background-color: #45a049;
+}
+
+#loadingScreen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85); /* Fondo oscuro semi-transparente */
+  
+  /* Centrar el contenido */
+  display: none; /* Oculto por defecto */
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  
+  z-index: 100; /* Asegura que esté por encima de todo */
+  color: white;
+  font-family: Arial, sans-serif;
+  font-size: 1.5em;
+  text-align: center;
+}
+
+/* La animación de "spin" */
+.loader {
+  border: 12px solid #f3f3f3; /* Gris claro */
+  border-top: 12px solid #3498db; /* Azul */
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  animation: spin 1.5s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
