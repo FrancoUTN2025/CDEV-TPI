@@ -95,7 +95,7 @@ audioLoader.load('src/sounds/paso_tierra.mp3', function(buffer) {
 // --- FIN DEL BLOQUE DE AUDIO ---
 
 
-const url = 'src/models/Entornos/scene(Paredes7).gltf'; 
+const url = 'src/models/Entornos/scene(ParedeVisibles4).gltf'; 
 const forestUrl = 'src/models/Entornos/bosque6.glb'; 
 
 // --- Rutas para el juego (Modo sin Blender) ---
@@ -289,7 +289,7 @@ function refreshGroups() {
 
   try {
     environmentRoot.traverse((child) => {
-    if (!child.isMesh) return;
+    // if (!child.isMesh) return; // <-- ¡LÍNEA ELIMINADA!
 
     if (child.name.toLowerCase().includes('floor')) {
       floorsToAdd.push(child);
@@ -301,10 +301,15 @@ function refreshGroups() {
                         name.includes('ball') ||
                         name.includes('orb');
     
-    const isSphereGeometry = child.geometry && child.geometry.type === 'SphereGeometry';
+    // Si el 'child' no es un mesh, no tendrá geometría
+    const isSphereGeometry = child.isMesh && child.geometry && child.geometry.type === 'SphereGeometry';
 
     if (isSphereName || isSphereGeometry) {
-      interactablesToAdd.push(child);
+      // Solo añade el objeto si NO es un 'floor'
+      // (Previene que los pisos sean clickeables)
+      if (!child.name.toLowerCase().includes('floor')) {
+           interactablesToAdd.push(child);
+      }
     }
   });
   } catch (err) {
@@ -338,7 +343,7 @@ function refreshGroups() {
               materials.forEach(material => {
                   if (material.isMeshStandardMaterial || material.isMeshPhysicalMaterial) {
                       
-                      material.emissive = new THREE.Color(emissiveColorValue);
+                      material.emissive = new THREE.Color(0xFF0000);
                       
                       if (isTargetSphere) {
                           material.metalness = 1.0; 
@@ -791,7 +796,7 @@ function onSphereInteract(mesh) {
       setTimeout(() => {
           clearSelection();
           checkAllMissionsComplete(); // Chequea si el juego terminó
-      }, 1000);
+      }, 2500);
       return; 
   }
 
@@ -1072,15 +1077,15 @@ function selectMesh(mesh) {
   else if (name.includes('sphere')) {
        const sphereIndexInGroup = interactablesGroup.children.findIndex(child => child === mesh);
        if (sphereIndexInGroup === 2) {
-           dialog = '¿Viajar a otra escena? (Enter)';
+           dialog = '¿Viajar al reino? (Enter)';
        } else {
-           dialog = `Esfera ${sphereIndexInGroup + 1}. No hay acción disponible.`;
+           dialog = `No debes ingresar aquí`;
        }
   }
   
   // --- ¡NUEVO! Diálogo para el Portal de Salida ---
   else if (name.startsWith('portal_exit')) {
-      dialog = "Volver a la escena 1 (Enter)";
+      dialog = "Volver al santuario? (Enter)";
   }
   // --- FIN DEL BLOQUE DEL PORTAL ---
   
@@ -1152,6 +1157,14 @@ function showNextDialogueMessage() {
 
 // --- LÓGICA DE CLICK MANTENIDA (YA ES CORRECTA) ---
 window.addEventListener('pointerdown', (event) => {
+    // --- ¡SOLUCIÓN! ---
+    // Si la pantalla de bienvenida O el modal de controles están visibles,
+    // no ejecutes la lógica de raycasting (clic) en el mundo 3D.
+    if ((welcomeScreenElement && welcomeScreenElement.style.display !== 'none') ||
+        (controlsModalElement && controlsModalElement.style.display !== 'none')) {
+        return; // Detiene la ejecución aquí
+    }
+    // --- FIN DE LA SOLUCIÓN ---
     const rect = renderer.domElement.getBoundingClientRect();
     pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -1325,6 +1338,13 @@ loopMachine.addCallback(() => {
 const welcomeScreenElement = document.getElementById('welcomeScreen');
 const startButtonElement = document.getElementById('startButton');
 
+// --- ¡NUEVO! Elementos del Modal de Controles ---
+const controlsButtonElement = document.getElementById('controlsButton');
+const controlsModalElement = document.getElementById('controlsModal');
+const closeControlsSpanElement = document.getElementById('closeControlsSpan');
+const closeControlsButtonElement = document.getElementById('closeControlsButton');
+// --- FIN DE LO NUEVO ---
+
 const container = document.getElementById('bg');
 if (container) {
     container.appendChild(renderer.domElement);
@@ -1334,28 +1354,21 @@ if (container) {
 }
 
 
-// --- ¡NUEVA FUNCIÓN DE RESPALDO DE AUDIO! ---
-// Esta función se asegura de que el audio se "despierte" la primera vez
-// que el usuario haga clic en CUALQUIER LUGAR.
-function initializeAudio() {
-    if (listener.context.state === 'suspended') {
-        listener.context.resume();
-        console.log("AudioContext reanudado por clic.");
-        
-        // (¡ERROR CORREGIDO!)
-        // Eliminamos el .play() de aquí.
-        // loadEnvironment es el único que debe decidir si el audio suena.
-    }
-}
-// Lo adjuntamos a la ventana, para que se ejecute UNA SOLA VEZ
-window.addEventListener('click', initializeAudio, { once: true });
 
-
-// --- ¡FUNCIÓN startGame ACTUALIZADA! ---
 function startGame() {
     if (welcomeScreenElement) {
         welcomeScreenElement.style.display = 'none';
     }
+
+    // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+    // Nos aseguramos de que el modal de controles también esté
+    // oculto con un estilo en línea, para que la lógica
+    // del 'pointerdown' (clic) funcione correctamente.
+    if (controlsModalElement) {
+        controlsModalElement.style.display = 'none';
+    }
+    // --- FIN DE LA CORRECCIÓN ---
+
     resize.start(renderer);
     loopMachine.start();
     keyListener.start();
@@ -1372,7 +1385,8 @@ function startGame() {
     introDialogueMessages = [
         "Owl: Te llamamos aqui porque necesitamos tu ayuda...",
         "Owl: ...queremos recuperar el brillo de los reinos.",
-        "Owl: Entra al reino animal, ayuda a aquellos que lo necesitan y recupera la luz."
+        "Owl: ...esa esfera roja brillante es el reino animal.",
+        "Owl: Entra en él, ayuda a aquellos que lo necesitan y recupera la luz."
         // Puedes añadir más líneas aquí:
         // "Owl: ¡Ten cuidado!"
     ];
@@ -1387,11 +1401,41 @@ function startGame() {
     // --- FIN DEL DIÁLOGO ---
 }
 
-if (startButtonElement) {
+// --- ¡LÓGICA DE BOTONES DEL MENÚ DE INICIO ACTUALIZADA! ---
+if (startButtonElement && controlsButtonElement && controlsModalElement) {
+    
+    // 1. Botón de Iniciar Juego
     startButtonElement.addEventListener('click', startGame);
+    
+    // 2. Botón de Controles (para ABRIR el modal)
+    controlsButtonElement.addEventListener('click', () => {
+        controlsModalElement.style.display = 'flex'; // 'flex' porque lo usamos para centrar
+    });
+
+    // 3. Botón 'X' (para CERRAR el modal)
+    closeControlsSpanElement.addEventListener('click', () => {
+        controlsModalElement.style.display = 'none';
+    });
+
+    // 4. Botón 'Cerrar' (para CERRAR el modal)
+    closeControlsButtonElement.addEventListener('click', () => {
+        controlsModalElement.style.display = 'none';
+    });
+
+    // 5. Clic fuera del modal (para CERRAR el modal)
+    window.addEventListener('click', (event) => {
+        if (event.target == controlsModalElement) {
+            controlsModalElement.style.display = 'none';
+        }
+    });
+
+    // Detenemos el juego al inicio
     loopMachine.stop();
     keyListener.stop(); 
     resize.stop(); 
+    
 } else {
+    // Si no hay pantalla de bienvenida, inicia el juego directamente
     startGame();
 }
+// --- FIN DE LA LÓGICA DE BOTONES ---

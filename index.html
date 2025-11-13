@@ -36,14 +36,35 @@
         <div id="welcomeScreen">
             <h1>Bienvenido</h1>
             <button id="startButton">Iniciar Juego</button>
-        </div>
+            
+            <button id="controlsButton">Controles</button>
+            </div>
         
         <div id="loadingScreen">
         <div class="loader"></div>
         <p>Cargando Bosque...</p>
         </div>
+        
+        <div id="controlsModal">
+            <div class="modal-content">
+                <span id="closeControlsSpan" class="close-span">&times;</span>
+                <h2>Controles del Juego</h2>
+                
+                <div class="controls-list">
+                    <p><strong>W, A, S, D:</strong> Mover personaje</p>
+                    <p><strong>Flecha Izquierda / Derecha:</strong> Girar personaje</p>
+                    <p><strong>Click Izquierdo:</strong> Seleccionar objeto (animal, esfera, etc.)</p>
+                    <p><strong>Enter:</strong></p>
+                    <ul>
+                        <li>Avanzar en los diálogos</li>
+                        <li>Confirmar interacción (hablar, viajar, recoger)</li>
+                    </ul>
+                </div>
+                
+                <button id="closeControlsButton">Cerrar</button>
+            </div>
+        </div>
         <div id="bg"></div>
-        <script type="module" src="main.js"></script>
 
         <script type="importmap">
             {
@@ -52,7 +73,9 @@
                 }
             }
         </script>
+        
         <script type="module" src="main.js"></script>
+        
         <script src="js/fflate.min.js" defer></script>
         <script type="module" src="js/libs/FBXLoader.js" defer></script>
     </body>
