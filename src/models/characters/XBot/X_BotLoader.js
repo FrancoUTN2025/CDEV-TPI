@@ -11,7 +11,7 @@ for (const [key, value] of Object.entries(fileList)) {
     urlAnimations[key] = folder + 'animations/' + value;
 }
 
-const urlModel = folder + 'X_Bot.fbx';
+const urlModel = folder + 'girl.fbx';
 
 const X_BotLoader = () => {
     const animationLoader = new AnimationLoader(urlModel, urlAnimations)
