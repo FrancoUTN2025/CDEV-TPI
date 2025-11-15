@@ -16,14 +16,11 @@ import modelController from './src/controllers/ModeController.js';
 import animationController from './src/controllers/AnimationController.js';
 import rotationController from './src/controllers/RotationController.js';
 import cRotationController from './src/controllers/cRotationController.js';
-
-// --- ¡CORRECCIÓN DE ERROR DE INSTANCIA MÚLTIPLE! ---
-// Importamos el GLTFLoader desde el mismo lugar (CDN) que Three.js
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three/examples/jsm/loaders/GLTFLoader.js';
 
-scene.add(light);
 
-// --- Añadir un Sol y Luz Ambiental ---
+//Añadimos luces a la escena, intentamos imitar una luz solar, una luz direccional y una luz ambiental
+scene.add(light);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); 
 scene.add(ambientLight);
 const sunLight = new THREE.DirectionalLight(0xffffff, 2.5); 
@@ -31,23 +28,23 @@ sunLight.position.set(50, 100, 50);
 sunLight.target.position.set(0, 0, 0); 
 scene.add(sunLight);
 scene.add(sunLight.target);
-// --- Fin del código del Sol ---
+
 
 let bot;
 const gltfLoader = new GLTFLoader(); 
 
-// --- ¡BLOQUE SKYBOX! ---
+// Cargamos el fondo con un skybox
 try {
   const cubeTextureLoader = new THREE.CubeTextureLoader();
-  const skyboxPath = 'src/textures/skybox/'; // Ruta a tu carpeta
+  const skyboxPath = 'src/textures/skybox/'; 
   
   const skyboxImages = [
-    'px.png', // Lado derecho (X Positivo)
-    'nx.png', // Lado izquierdo (X Negativo)
-    'py.png', // Arriba (Y Positivo)
-    'ny.png', // Abajo (Y Negativo)
-    'pz.png', // Atrás (Z Positivo)
-    'nz.png'  // Frente (Z Negativo)
+    'px.png', 
+    'nx.png',
+    'py.png', 
+    'ny.png', 
+    'pz.png', 
+    'nz.png'  
   ];
 
   const skyboxTexture = cubeTextureLoader.setPath(skyboxPath).load(skyboxImages);
@@ -57,48 +54,35 @@ try {
 } catch (e) {
   console.error("Error al cargar el skybox:", e);
 }
-// --- FIN DEL BLOQUE SKYBOX ---
 
 
-// --- ¡NUEVO! CONFIGURACIÓN DE AUDIO ---
-// 1. El "Oído" de la escena. Lo adjuntamos a la cámara.
+
+// Agregamos audio al juego, sonido de pasos y sonido ambiental
 const listener = new THREE.AudioListener();
 camera.add(listener);
-
-// 2. El cargador de archivos de sonido
 const audioLoader = new THREE.AudioLoader();
-
-// 3. Sonido Ambiental
 const ambientSound = new THREE.Audio(listener);
 audioLoader.load('src/sounds/bosque_ambiente.mp3', function(buffer) {
     ambientSound.setBuffer(buffer);
     ambientSound.setLoop(true);
     ambientSound.setVolume(0.4);
     
-    // --- ¡CORRECCIÓN DE 'CARRERA' (Parte 1)! ---
-    // Si el sonido termina de cargar Y YA ESTAMOS en el bosque (area2),
-    // reprodúcelo inmediatamente.
     if (currentArea === 'area2') {
         ambientSound.play();
     }
 });
 
-// 4. Sonido de Pasos
 const footstepSound = new THREE.Audio(listener);
 audioLoader.load('src/sounds/paso_tierra.mp3', function(buffer) {
     footstepSound.setBuffer(buffer);
-    // --- ¡CORRECCIÓN DE LÓGICA DE PASOS (PARTE 1)! ---
-    // Lo ponemos en bucle para que la lógica play/stop funcione.
     footstepSound.setLoop(true); 
     footstepSound.setVolume(0.3);
 });
-// --- FIN DEL BLOQUE DE AUDIO ---
 
 
-const url = 'src/models/Entornos/scene(ParedeVisibles4).gltf'; 
+const url = 'src/models/Entornos/scene(Paredes7).gltf'; 
 const forestUrl = 'src/models/Entornos/bosque6.glb'; 
 
-// --- Rutas para el juego (Modo sin Blender) ---
 // Animales
 const rabbitUrl = 'src/models/animales/rabbit.glb';
 const foxUrl = 'src/models/animales/fox/fox.glb';
@@ -109,7 +93,7 @@ const monkeyUrl = 'src/models/animales/monkey/monkey.glb';
 const spiderUrl = 'src/models/animales/spider.glb'; 
 const toadUrl = 'src/models/animales/toad/toad.glb'; 
 const snakeUrl = 'src/models/animales/snake.glb'; 
-const owlUrl = 'src/models/animales/owl/owl.glb'; // <-- ¡NUEVO! ¡Verifica esta ruta!
+const owlUrl = 'src/models/animales/owl/owl.glb'; 
 
 // Comidas
 const carrotUrl = 'src/models/comidas/carrot.glb';
@@ -118,27 +102,27 @@ const appleUrl = 'src/models/comidas/apple.glb';
 const bananaUrl = 'src/models/comidas/banana.glb'; 
 
 
-// --- Grupo de suelos sobre los que el bot puede caminar ---
+//Grupo de suelos sobre los que el bot puede caminar
 const walkableGroundGroup = new THREE.Group();
 scene.add(walkableGroundGroup);
 
-// --- Grupo de objetos interactuables (esferas, animales, comida) ---
+//Grupo de objetos interactuables (esferas, animales, comida)
 const interactablesGroup = new THREE.Group();
 scene.add(interactablesGroup);
 
-// --- Contenedor para objetos del juego cargados por código ---
+//Contenedor para objetos del juego cargados por código
 const gameObjectsGroup = new THREE.Group();
 scene.add(gameObjectsGroup);
 
-// --- Variables de física ---
+//Variables de física 
 let velocityY = 0;
 const gravity = -0.5;
 
-// --- Raycaster y vector hacia abajo ---
+// Raycaster y vector hacia abajo
 const raycaster = new THREE.Raycaster();
 const down = new THREE.Vector3(0, -1, 0);
 
-// --- SISTEMA DE ÁREAS (Ajustado) ---
+// Sistema de áreas (ajustado)
 const areas = {
   area1: { position: new THREE.Vector3(0, 0, 0), floorY: 0, name: 'Área 1' },
   area2: { position: new THREE.Vector3(0, 0, 0), floorY: 0, name: 'Área 2 (Bosque)' } 
@@ -147,8 +131,8 @@ const areas = {
 let currentArea = 'area1';
 let environmentRoot = null;
 
-// --- ¡VARIABLES DE ESTADO DE MISIÓN! ---
-let currentQuestAnimal = null; // Misión de comida activa (ej. "animal_rabbit")
+// Variables de estado de misión
+let currentQuestAnimal = null;
 let questRabbitFoodDone = false; 
 let questFoxFoodDone = false; 
 let questHorseFoodDone = false; 
@@ -161,35 +145,32 @@ let questVertebrateReunionComplete = false;
 let questVertebrateReunionOffered = false
 let vertebrateQuestGiver = null; 
 
-// --- ¡NUEVO! Variable para el portal ---
+//Variable para el portal
 let exitPortal = null; 
 
-// --- ¡NUEVO! Variables para el Diálogo Inicial ---
-let introDialogueMessages = []; // Aquí pondrás los textos
+//Variables para el Diálogo Inicial
+let introDialogueMessages = [];
 let currentDialogueIndex = 0;
 let isIntroDialogueActive = false;
-// --- FIN DEL BLOQUE DE DIÁLOGO ---
 
-// --- Listas de misiones dinámicas ---
+//Listas de misiones dinámicas
 let loadedVertebrates = new Set();
 let loadedInvertebrates = new Set();
 let vertebratesToFind = new Set(); 
 
-// --- ¡NUEVO! Elemento de pantalla de carga ---
+//Elemento de pantalla de carga
 const loadingScreenElement = document.getElementById('loadingScreen');
 
 // Función de ayuda para mostrar/ocultar
 function showLoadingScreen(show) {
     if (loadingScreenElement) {
-        // Usamos 'flex' porque así lo definimos en el CSS para centrar
         loadingScreenElement.style.display = show ? 'flex' : 'none';
     }
 }
 
 
-// --- ¡NUEVO! Función para chequear el final del juego ---
+// Función para chequear el final del juego
 function checkAllMissionsComplete() {
-    // 1. Chequea si TODAS las misiones de comida están hechas
     const allFoodQuestsDone = questRabbitFoodDone &&
                             questFoxFoodDone &&
                             questHorseFoodDone &&
@@ -197,38 +178,79 @@ function checkAllMissionsComplete() {
                             questToadFoodDone &&
                             questSnakeFoodDone;
     
-    // 2. Si la comida Y la reunión de vertebrados están completas
     if (allFoodQuestsDone && questVertebrateReunionComplete) {
         console.log("¡TODAS LAS MISIONES COMPLETADAS! Iniciando final.");
         
-        // Usamos setTimeout para esperar 7 segundos
         setTimeout(() => {
             console.log("Mostrando mensaje final y creando portal.");
             
-            // 1. Prepara el mensaje
             let feedback = "Gracias por ayudarnos a recuperar nuestro brillo, puedes regresar";
             
-            // 2. Aumenta el tamaño de la fuente
             interactionPrompt.style.fontSize = '1.5em'; 
-            
-            // 3. Muestra el mensaje
+
             interactionPrompt.innerText = feedback;
             showInteractionPrompt(true); 
-            
-            // 4. ¡Llamamos a la función para crear el portal!
             createExitPortal();
+            setTimeout(clearSelection, 10000); 
             
-            // 5. Ocultar el mensaje grande después de 10 segundos
-            setTimeout(clearSelection, 10000); // 10s en pantalla
-            
-        }, 3000); // 3s de espera
+        }, 3000);
     }
 }
 
 
-// --- ¡NUEVO! Función para crear el portal de salida ---
+function createTextLabel(text, color = '#FFFFFF', fontSize = 24, strokeColor = 'rgba(0,0,0,0.8)', strokeWidth = 2) {
+    
+    // 1. Crear un canvas 2D
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    
+    // 2. Establecer la fuente y medir el texto
+    const font = `bold ${fontSize}px Arial`;
+    context.font = font;
+    const metrics = context.measureText(text);
+    const textWidth = metrics.width;
+    
+    // 3. Ajustar el tamaño del canvas al texto
+    canvas.width = textWidth + (strokeWidth * 2);
+    canvas.height = fontSize + (strokeWidth * 2);
+    
+    // 4. Volver a aplicar la fuente (se resetea al cambiar el tamaño)
+    context.font = font;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    
+    // 5. Dibujar el borde (stroke)
+    context.strokeStyle = strokeColor;
+    context.lineWidth = strokeWidth;
+    context.strokeText(text, canvas.width / 2, canvas.height / 2);
+    
+    // 6. Dibujar el relleno (fill)
+    context.fillStyle = color;
+    context.fillText(text, canvas.width / 2, canvas.height / 2);
+
+    // 7. Crear la textura y el material del Sprite
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    
+    const material = new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true,
+        depthTest: false 
+    });
+
+    // 8. Crear el Sprite (el objeto 3D)
+    const sprite = new THREE.Sprite(material);
+    
+    // 9. Escalar el sprite (¡VALOR REDUCIDO!)
+    const aspect = canvas.width / canvas.height;
+    sprite.scale.set(aspect * 0.7, 0.7, 1); // <-- Reducido de 1.0 a 0.8
+    
+    return sprite;
+}
+
+
+//Función para crear el portal de salida
 function createExitPortal() {
-    // Solo lo creamos si no existe ya
     if (exitPortal) return;
 
     console.log("Creando portal de salida...");
@@ -244,13 +266,11 @@ function createExitPortal() {
     });
     
     exitPortal = new THREE.Mesh(geometry, material);
-    exitPortal.name = "portal_exit"; // Nombre para identificarlo
-    
-    // Posición en el centro (0, 1, 0) para que esté sobre el suelo
+    exitPortal.name = "portal_exit";
     exitPortal.position.set(0, 1, 0);
     
     scene.add(exitPortal);
-    interactablesGroup.add(exitPortal); // ¡Importante para que sea clickeable!
+    interactablesGroup.add(exitPortal);
 }
 
 
@@ -264,8 +284,7 @@ function refreshGroups() {
     interactablesGroup.remove(interactablesGroup.children[0]);
   }
 
-  // --- ¡NUEVO! Si el portal existe, volver a añadirlo al grupo ---
-  // (ya que interactablesGroup.clear() lo borró de ese grupo)
+  // (Tu lógica de portal se mantiene)
   if (exitPortal) {
       interactablesGroup.add(exitPortal);
   }
@@ -279,18 +298,28 @@ function refreshGroups() {
   const interactablesToAdd = []; 
   
   const emissiveColors = [
-      0xFF0000,   // 1. Rojo (Índice 0)
-      0x00FFFF,   // 2. Celeste (Índice 1)
-      0x7FFFD4,   // 3. Verde Agua (Índice 2) <-- ¡NUEVO OBJETIVO!
-      0x00FF00,   // 4. Verde (Índice 3)
-      0xA0522D    // 5. Marrón (Índice 4)
+      0xFF0000,   // 1. Rojo
+      0x00FFFF,   // 2. Celeste
+      0x7FFFD4,   // 3. Verde Agua (Objetivo)
+      0x00FF00,   // 4. Verde
+      0xA0522D    // 5. Marrón
   ];
+  
+  // --- ¡NUEVO! Nombres de los reinos ---
+  const realmNames = [
+      "Protista",   
+      "Monera",  
+      "Animalia" ,
+      "Fungi",   
+      "Plantae"     
+  ];
+  // --- FIN DE LO NUEVO ---
 
 
   try {
     environmentRoot.traverse((child) => {
-    // if (!child.isMesh) return; // <-- ¡LÍNEA ELIMINADA!
-
+    // ... (tu lógica de traverse se mantiene igual) ...
+    
     if (child.name.toLowerCase().includes('floor')) {
       floorsToAdd.push(child);
     }
@@ -301,12 +330,9 @@ function refreshGroups() {
                         name.includes('ball') ||
                         name.includes('orb');
     
-    // Si el 'child' no es un mesh, no tendrá geometría
     const isSphereGeometry = child.isMesh && child.geometry && child.geometry.type === 'SphereGeometry';
 
     if (isSphereName || isSphereGeometry) {
-      // Solo añade el objeto si NO es un 'floor'
-      // (Previene que los pisos sean clickeables)
       if (!child.name.toLowerCase().includes('floor')) {
            interactablesToAdd.push(child);
       }
@@ -317,6 +343,7 @@ function refreshGroups() {
     return;
   }
   
+  // ... (tu lógica de floorsToAdd.forEach se mantiene igual) ...
   floorsToAdd.forEach(child => {
       walkableGroundGroup.add(child);
       if (child.material && child.material.color) {
@@ -341,6 +368,7 @@ function refreshGroups() {
               const isTargetSphere = (sphereIndex === 2); 
               
               materials.forEach(material => {
+                  // ... (tu lógica de materiales se mantiene) ...
                   if (material.isMeshStandardMaterial || material.isMeshPhysicalMaterial) {
                       
                       material.emissive = new THREE.Color(0xFF0000);
@@ -361,6 +389,21 @@ function refreshGroups() {
                   }
               });
               
+
+              const labelText = realmNames[sphereIndex];
+              if (labelText) {
+                  const label = createTextLabel(labelText, '#FFFFFF');
+                  
+                  // Posicionamos la etiqueta sobre la esfera
+                  label.position.copy(child.position);
+                  
+                  // --- ¡VALOR 'Y' AJUSTADO! ---
+                  label.position.y += 1.2; // <-- Reducido de 1.4 a 1.2
+                  
+                  // La añadimos al 'gameObjectsGroup'
+                  gameObjectsGroup.add(label);
+              }
+
               sphereIndex++; 
               
           } catch (e) {
@@ -1087,10 +1130,7 @@ function selectMesh(mesh) {
   else if (name.startsWith('portal_exit')) {
       dialog = "Volver al santuario? (Enter)";
   }
-  // --- FIN DEL BLOQUE DEL PORTAL ---
-  
-  
-  // --- FIN DE LÓGICA DE DIÁLOGO ---
+
   
   interactionPrompt.innerText = dialog;
   showInteractionPrompt(true); 
@@ -1153,13 +1193,9 @@ function showNextDialogueMessage() {
         console.log("Diálogo inicial completado.");
     }
 }
-// --- FIN DE LA NUEVA FUNCIÓN ---
 
-// --- LÓGICA DE CLICK MANTENIDA (YA ES CORRECTA) ---
 window.addEventListener('pointerdown', (event) => {
-    // --- ¡SOLUCIÓN! ---
-    // Si la pantalla de bienvenida O el modal de controles están visibles,
-    // no ejecutes la lógica de raycasting (clic) en el mundo 3D.
+
     if ((welcomeScreenElement && welcomeScreenElement.style.display !== 'none') ||
         (controlsModalElement && controlsModalElement.style.display !== 'none')) {
         return; // Detiene la ejecución aquí
@@ -1438,4 +1474,3 @@ if (startButtonElement && controlsButtonElement && controlsModalElement) {
     // Si no hay pantalla de bienvenida, inicia el juego directamente
     startGame();
 }
-// --- FIN DE LA LÓGICA DE BOTONES ---
