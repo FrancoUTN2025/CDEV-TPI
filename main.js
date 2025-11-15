@@ -313,7 +313,6 @@ function refreshGroups() {
       "Fungi",   
       "Plantae"     
   ];
-  // --- FIN DE LO NUEVO ---
 
 
   try {
